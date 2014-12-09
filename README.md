@@ -1,4 +1,4 @@
-bashthings
-==========
+shthings
+========
 
-various utilities written in bash
+various utilities written in sh
