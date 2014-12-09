@@ -1,0 +1,58 @@
+#!/bin/sh
+
+set -f
+IFS=$(printf ' \n\r\t\f\v')
+
+wordcount () { echo $#; }
+charcount () { echo ${#1}; }
+bytecount () { LANG=C charcount "$@"; }
+
+c=0 m=0 l=0 w=0
+OPTIND=1
+while getopts cmlw opt; do
+  case $opt in
+    c) c=1 ;;
+    m) m=1 ;;
+    l) l=1 ;;
+    w) w=1 ;;
+    \?) echo "Invalid option: -$OPTARG" >&2 ;;
+  esac
+done
+shift $((OPTIND-1))
+[ $((c+m+l+w)) = 0 ] && c=1 w=1 l=1
+
+wc () {
+  filename="$1"
+  ccount=0 wcount=0 lcount=0 bcount=0
+  while read -r line ; do
+    lcount=$((lcount + 1))
+    if [ "$w" = 1 ] ; then
+      tmp=$(wordcount $line)
+      wcount=$((wcount + tmp + 1))
+    fi
+    if [ "$m" = 1 ] ; then 
+      tmp=$(charcount "$line")
+      ccount=$((ccount + tmp + 1))
+    fi
+    if [ "$c" = 1 ] ; then 
+      tmp=$(bytecount "$line")
+      bcount=$((bcount + tmp + 1))
+    fi
+  done
+  [ "$l" = 1 ] && printf '%d ' "$lcount"
+  [ "$w" = 1 ] && printf '%d ' "$wcount"
+  [ "$m" = 1 ] && printf '%d ' "$ccount"
+  [ "$c" = 1 ] && printf '%d ' "$bcount"
+  printf '%s\n' "$filename"
+}
+
+[ $# = 0 ] && set -- -
+
+while ! [ $# = 0 ] ; do
+  if [ "$1" = - ] ; then
+    wc
+  else
+    wc "$1" < "$1"
+  fi
+  shift
+done
